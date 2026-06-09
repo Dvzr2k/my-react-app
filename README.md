@@ -177,18 +177,54 @@ npm start                         # Run dev server
 
 ---
 
-## Infrastructure Workflow
+## How to Use
 
-```bash
-# New infrastructure
-cd terraform && terraform plan
-cd terraform && terraform apply
-
-# Via Claude Code skills
-/tf-plan      # preview
-/tf-apply     # apply
-/infra-audit  # security + cost + drift check
+### Deploy a React code change (automatic)
 ```
+1. Edit any file in src/
+2. git add + commit + push to main
+3. GitHub Actions triggers automatically (~2 min)
+4. Site updates — no manual steps needed
+```
+
+### Add or change infrastructure
+```
+1. Claude uses MCP to look up resource docs from Terraform registry
+2. tf-writer agent generates or modifies the .tf file
+3. /tf-plan     → preview what will change in AWS
+4. /tf-apply    → push changes to AWS
+5. /infra-audit → verify security + cost + drift
+6. git push     → save .tf changes to GitHub
+```
+> Always commit your .tf changes after applying — keeps code and AWS in sync.
+
+### Audit → fix → verify loop
+```
+1. /infra-audit              → get full security + cost + drift report
+2. "fix [finding name]"      → Claude uses MCP + tf-writer to apply fix
+3. /tf-plan                  → preview the fix
+4. /tf-apply                 → push fix to AWS
+5. /infra-audit              → verify finding is gone
+6. git push                  → save to GitHub
+```
+
+### Health checks
+```
+/infra-status   → quick check: is everything alive? (S3, CloudFront, HTTP 200)
+/infra-audit    → full checkup: security + cost + drift all at once
+```
+
+### When to use each skill or agent
+
+| Situation | Use |
+|---|---|
+| Something looks broken | `/infra-status` |
+| Before a big change | `/infra-audit` |
+| Adding new AWS resources | MCP → tf-writer → `/tf-plan` → `/tf-apply` |
+| Security concern | `security-auditor` agent directly |
+| Cost review | `cost-optimizer` agent directly |
+| Suspected drift | `drift-detector` agent directly |
+| Emergency deploy (CI/CD failed) | `/deploy` |
 
 ---
 
