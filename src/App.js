@@ -18,7 +18,7 @@ const styles = {
   title: {
     fontSize: "2.4rem",
     fontWeight: "700",
-    color: "#69f0ae",
+    color: "#00bcd4",
     margin: "0 0 6px 0",
     letterSpacing: "1px",
   },
