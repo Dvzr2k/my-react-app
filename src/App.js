@@ -198,7 +198,7 @@ function App() {
         {/* What this project implements */}
         <div style={styles.sectionTitle}>About This Deployment</div>
         <div style={styles.descCard}>
-          This capstone project demonstrates a full agentic DevOps workflow using{" "}
+          This project demonstrates a full AGENTIC DEVOPS WORKFLOW using{" "}
           <strong style={{ color: "#69f0ae" }}>Claude Code</strong> as the AI
           orchestration engine. The React app is deployed to{" "}
           <strong style={{ color: "#69f0ae" }}>AWS S3</strong> and served

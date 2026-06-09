@@ -1,0 +1,3 @@
+- [CloudFront Pricing Analysis](cloudfront-pricing.md) — PriceClass_200 → PriceClass_100 saves 48%
+- [S3 Storage Class](s3-storage-class.md) — Standard → Intelligent-Tiering for variable access
+- [CloudFront Compression](cloudfront-compression.md) — Enable gzip compression on text assets

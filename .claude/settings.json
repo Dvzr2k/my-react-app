@@ -1,0 +1,36 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash /mnt/hgfs/DevOps-Proyects/React-deployment-byDV/my-react-app/.claude/hooks/user-prompt-guard.sh"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash /mnt/hgfs/DevOps-Proyects/React-deployment-byDV/my-react-app/.claude/hooks/pre-tool-guard.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash /mnt/hgfs/DevOps-Proyects/React-deployment-byDV/my-react-app/.claude/hooks/post-tool-logger.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
