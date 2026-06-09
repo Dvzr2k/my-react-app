@@ -1,181 +1,195 @@
+# My React App — AWS DevOps Capstone
 
-# **Deploy a React Application on Ubuntu VM with Nginx**
+![Live](https://img.shields.io/badge/site-live-brightgreen)
+![React](https://img.shields.io/badge/React-19-61dafb?logo=react)
+![AWS](https://img.shields.io/badge/AWS-S3%20%2B%20CloudFront-orange?logo=amazon-aws)
+![Terraform](https://img.shields.io/badge/IaC-Terraform-7b42bc?logo=terraform)
+![GitHub Actions](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088ff?logo=github-actions)
+![Claude](https://img.shields.io/badge/AI-Claude%20Code-black?logo=anthropic)
 
-This guide provides step-by-step instructions to deploy and run a **This React application** on an **Ubuntu VM** using **Nginx**, making it accessible from a **public IP**.
+**Live site:** https://d255xh9kackac4.cloudfront.net
 
----
-
-
-## **1. Install Node.js and npm**  
-Since React requires **Node.js** and **npm**, install them first:  
-
-```sh
-sudo apt update
-sudo apt install -y nodejs npm
-```
-
-Verify the installation:  
-
-```sh
-node -v
-npm -v
-```
+A React 19 portfolio app deployed to AWS using S3 + CloudFront, provisioned with Terraform, automated via GitHub Actions with OIDC keyless authentication, and orchestrated entirely by Claude Code as the AI engine.
 
 ---
 
-## **2. Install Nginx**  
-Update package lists and install **Nginx**:  
+## Architecture
 
-```sh
-sudo apt install -y nginx
-```
+```mermaid
+flowchart TD
+    DEV["👨‍💻 Developer\n(local)"]
+    GH["🐙 GitHub\npush to main"]
+    GHA["⚙️ GitHub Actions\nnpm ci + npm run build\nOIDC → AWS auth"]
+    OIDC["🔑 IAM OIDC Role\nno stored keys"]
 
-Start and enable Nginx:  
+    subgraph CLAUDE ["🤖 Claude Code — AI Orchestration"]
+        direction TB
+        TFW["tf-writer\nTerraform gen"]
+        SEC["security-auditor\nTF audit · Sonnet"]
+        COST["cost-optimizer\nHaiku"]
+        DRIFT["drift-detector\nHaiku"]
+        HOOKS["🛡️ Safety Hooks\nUserPromptSubmit · PreToolUse · PostToolUse"]
+        SKILLS["Skills: /deploy · /tf-plan · /tf-apply · /infra-audit"]
+    end
 
-```sh
-sudo systemctl start nginx
-sudo systemctl enable nginx
-```
+    TF["🏗️ Terraform\nIaC Provisioning"]
 
-Check Nginx status:  
+    subgraph AWS ["☁️ AWS Infrastructure"]
+        S3["🪣 S3 Bucket\nStatic hosting · OAC"]
+        CF["☁️ CloudFront\nCDN · Cache invalidation"]
+        TFSTATE["🔒 TF State\nS3 backend\n(DynamoDB lock optional)"]
+    end
 
-```sh
-systemctl status nginx
-```
+    USER["🌐 End User\nReact SPA"]
 
----
+    DEV -->|git push| GH
+    GH -->|trigger workflow| GHA
+    GHA -->|assume role| OIDC
+    GHA -->|sync build/| S3
+    GHA -->|invalidate cache| CF
+    DEV -.->|invoke skills| CLAUDE
+    CLAUDE --> TF
+    TF -->|provision| S3
+    TF -->|provision| CF
+    TF -->|provision| OIDC
+    TF -->|manage| TFSTATE
+    CF -->|serve static assets| USER
 
-## **3. Clone the React Application from GitHub**  
-Navigate to a temporary directory and **clone the repository**:  
-
-```sh
-git clone https://github.com/pravinmishraaws/my-react-app.git
-cd my-react-app
-```
-
-**Open the App.js file**
-
-Navigate to your React app’s source folder:
-
-```sh
-cd my-react-app/src
-```
-
-Open the App.js file in a text editor:
-
-```sh
-nano App.js
-```
-(or use vi/vim if you prefer)
-
-Modify the content
-
-```sh
-<h2>Deployed by: <strong>Your Full Name</strong></h2>
-<p>Date: <strong>DD/MM/YYYY</strong></p>
-```
-
-Update your details like: Your Full Name & Date
-
----
-
-## **4. Install Dependencies and Build the React App**  
-Install required dependencies:  
-
-```sh
-npm install
-```
-
-Build the React application:  
-
-```sh
-npm run build
-```
-
-This will generate a **`build/`** folder with production-ready static files.
-
----
-
-## **5. Deploy Build Files to Nginx Web Directory**  
-Remove any existing files in the Nginx web directory:  
-
-```sh
-sudo rm -rf /var/www/html/*
-```
-
-Copy the React **build files** to `/var/www/html/`:  
-
-```sh
-sudo cp -r build/* /var/www/html/
-```
-
-Set proper permissions:  
-
-```sh
-sudo chown -R www-data:www-data /var/www/html
-sudo chmod -R 755 /var/www/html
+    style CLAUDE fill:#1c1c2e,stroke:#d2a8ff,color:#d2a8ff
+    style AWS fill:#1a1f2e,stroke:#e3b341,color:#e3b341
 ```
 
 ---
 
-## **6. Configure Nginx for React**  
-Nginx configuration file:   
+## Tech Stack
+
+| Layer | Technology | Purpose |
+|---|---|---|
+| Frontend | React 19 | UI component |
+| Hosting | AWS S3 | Static file storage |
+| CDN | AWS CloudFront | HTTPS + global delivery |
+| Auth | AWS IAM + OIDC | Keyless CI/CD authentication |
+| Encryption | AES256 (SSE-S3) | S3 object encryption |
+| IaC | Terraform | Infrastructure provisioning |
+| CI/CD | GitHub Actions | Auto-deploy on push to main |
+| AI Engine | Claude Code | Agentic DevOps orchestration |
+
+---
+
+## Project Structure
 
 ```
-echo 'server {
-    listen 80;
-    server_name _;
-    root /var/www/html;
-    index index.html;
-    
-    location / {
-        try_files $uri /index.html;
-    }
-
-    error_page 404 /index.html;
-}' | sudo tee /etc/nginx/sites-available/default > /dev/null
-
-```
-
-Restart Nginx to apply the changes:  
-
-```sh
-sudo systemctl restart nginx
+my-react-app/
+├── src/                        # React source code
+├── public/                     # Static assets
+├── terraform/                  # All AWS infrastructure
+│   ├── main.tf                 # S3 + CloudFront + encryption
+│   ├── github-oidc.tf          # OIDC provider + IAM role
+│   ├── variables.tf
+│   ├── outputs.tf
+│   ├── providers.tf
+│   └── backend.tf              # S3 remote state (optional)
+├── .github/
+│   └── workflows/
+│       └── build-deploy.yaml   # CI/CD pipeline
+├── .claude/
+│   ├── agents/                 # security-auditor, cost-optimizer, drift-detector, tf-writer
+│   ├── skills/                 # /tf-plan, /tf-apply, /deploy, /infra-audit, etc.
+│   ├── hooks/                  # Safety guards
+│   ├── settings.json           # Hooks configuration
+│   └── settings.local.json     # AWS credentials (gitignored)
+├── .mcp.json                   # MCP servers (AWS + Terraform)
+└── CLAUDE.md                   # Claude Code instructions
 ```
 
 ---
 
-## **7. Find Your Public IP and Access the Application**  
-Retrieve the **public IP** of your Ubuntu VM:  
+## Claude Code Features
 
-```sh
-curl ifconfig.me
+### Skills
+| Skill | Purpose |
+|---|---|
+| `/scaffold-terraform` | Generates all Terraform files from scratch |
+| `/tf-plan` | Runs terraform plan + risk analysis |
+| `/tf-apply` | Runs terraform apply + verifies deployment |
+| `/deploy` | Builds React app and syncs to S3 + invalidates CloudFront |
+| `/setup-gh-actions` | Creates or validates the GitHub Actions workflow |
+| `/infra-audit` | Parallel security + cost + drift audit |
+| `/infra-status` | Health dashboard of all resources |
+
+### Subagents
+| Agent | Model | Tools | Purpose |
+|---|---|---|---|
+| `security-auditor` | Sonnet | Read | Audits Terraform for security issues |
+| `cost-optimizer` | Haiku | Read | Finds cost optimization opportunities |
+| `drift-detector` | Haiku | Bash, Read | Detects infrastructure drift |
+| `tf-writer` | Sonnet | Read, Write | Generates production-quality Terraform |
+
+### Hooks
+| Hook | Event | Guards Against |
+|---|---|---|
+| `user-prompt-guard` | UserPromptSubmit | Destructive prompts (nuke, wipe, delete all) |
+| `pre-tool-guard` | PreToolUse | Dangerous commands (terraform destroy, aws s3 rm) |
+| `post-tool-logger` | PostToolUse | Logs every terraform apply to deploy.log |
+
+### MCP Servers
+- **AWS MCP** — Claude queries live AWS resources directly
+- **Terraform MCP** — Claude looks up provider docs from the official registry
+
+---
+
+## CI/CD Flow
+
+Every push to `main` triggers the pipeline automatically:
+
+```yaml
+- uses: aws-actions/configure-aws-credentials@v4
+  with:
+    role-to-assume: arn:aws:iam::092443461861:role/my-react-app-github-actions-role
+
+- run: npm ci && npm run build
+- run: aws s3 sync build/ s3://my-react-app-production-site --delete
+- run: aws cloudfront create-invalidation --distribution-id E1BFQPCLMEHGE --paths "/*"
 ```
 
-Now, students can **access the React application** in a browser using:  
+No AWS access keys stored anywhere — OIDC issues a temporary 1-hour token scoped to this repo and main branch only.
 
-```
-http://<your-public-ip>
+---
+
+## Security
+
+- S3 bucket is fully private — accessible only via CloudFront OAC
+- HTTPS enforced — HTTP redirects to HTTPS automatically
+- OIDC authentication — no long-lived AWS credentials
+- IAM least privilege — only S3 sync + CloudFront invalidation permissions
+- AES256 encryption at rest on all S3 objects
+
+---
+
+## Local Development
+
+```bash
+npm install --no-bin-links        # VMware shared folder workaround
+npm start                         # Run dev server
 ```
 
-For example, if the public IP is **203.0.113.25**, visit:  
+> **Note:** On VMware hgfs use `node node_modules/react-scripts/bin/react-scripts.js build` instead of `npm run build`
 
-```
-http://203.0.113.25
+---
+
+## Infrastructure Workflow
+
+```bash
+# New infrastructure
+cd terraform && terraform plan
+cd terraform && terraform apply
+
+# Via Claude Code skills
+/tf-plan      # preview
+/tf-apply     # apply
+/infra-audit  # security + cost + drift check
 ```
 
 ---
 
-## **8. Verify the Deployment**  
-Ensure Nginx is correctly serving the React app:  
-
-```sh
-curl <your-public-ip>
-```
-
-If successful, your **React app is live!**  
-
----
-
-## **Your React App is Now Live on Ubuntu with Nginx!**  
-Now your **React application** is deployed on an **Ubuntu VM with Nginx**, accessible from a **public IP**. 
+Built by **Diego Valdez** · Powered by React, AWS & Claude Code · 2026
